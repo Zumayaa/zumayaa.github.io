@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Space Invaders</title>
+</head>
+
+<body>
+    <div class="container">
+        <canvas id="my_canvas" width="900" height="900"></canvas>
+    </div>
+
+    <div class="instrucciones">
+        <h1>Instrucciones</h1>
+        <ul>
+            <li>Usa las flechas izquierda y derecha para moverte.</li>
+            <li>Presiona espacio para disparar.</li>
+            <li>Evita que los enemigos lleguen al fondo.</li>
+            <li>Con shift usas bala antitanques.</li>
+            <li>Presiona "E" para pausar el juego.</li>
+        </ul>
+    </div>
+
+    <script src="player.js"></script>
+    <script src="enemy.js"></script>
+    <script src="bullet.js"></script>
+    <script src="enemyVariety.js"></script>
+    <script type="text/javascript">
+        const my_canvas = document.getElementById('my_canvas');
+        const ctx = my_canvas.getContext('2d');
+
+        var flag = 0;
+        var pressed = 0;
+
+        var points = 0;
+
+        var enemigosMuertos = 0;
+
+        var baluchaPrueba = 0;
+        var bazukaso = 0;
+        var ammoBazuka = 2;
+        var bazukaDisparada = false;
+        var ammo = 75;
+
+        var speed = 0;
+
+        var direction = "";
+
+        var walls = [];
+        var perder = [];
+        var enemies = [];
+        var enemigoFuerte = [];
+
+        var perdiste = 0;
+
+        var iniciar = false;
+        var pause = false;
+
+        var posicionY = 0;
+        var posicionX = 0;
+
+        var vidaEnemigoFuerte = 0;
+
+        var derechaPlayer = 0;
+        var playerDerecha = new Image();
+        playerDerecha.src = "files/player/player_Derecha.png";
+
+        var izquierdaPlayer = 0;
+        var playerIzquierda = new Image();
+        playerIzquierda.src = "files/player/player_Izquierda.png";
+
+        var playerParado = new Image();
+        playerParado.src = "files/player/player_Parado.png";
+
+        var playerDisparo = 0;
+        var playerDisparando = new Image();
+        playerDisparando.src = "files/player/player_Disparando.png";
+
+        var balazo = new Image();
+        balazo.src = "files/bala/bala.png";
+
+        var balota = new Image();
+        balota.src = "files/bala/basuka.png";
+        
+        var disparoPlayer = 0;
+
+        let timer = 0;
+        let timerIspausa = false;
+        let timerIniciado = false;
+
+        const menu = new Image();
+        menu.src = 'files/menu.png';
+
+        const fondo = new Image();
+        fondo.src = 'files/fondo.png';
+
+        const fondo2 = new Image();
+        fondo2.src = 'files/prueba.jpg';
+
+        const carroMuro = new Image();
+        carroMuro.src = 'files/walls/barrera1.png';
+
+        const barraPerder = new Image();
+        barraPerder.src = 'files/walls/barraPerder.png';
+
+        const zombieFuerte = new Image();
+        zombieFuerte.src = 'files/zombie/strongZombie.png';
+
+        const pausa = new Image();
+        pausa.src = 'files/PAUSA.png';
+
+        const ganaste = new Image();
+        ganaste.src = 'files/GANASTE.png';
+
+        const imgPerder = new Image();
+        imgPerder.src = 'files/PERDISTE.png';
+
+        let enemigosImgs = [
+            new Image(),
+            new Image(),
+            new Image(),
+            new Image(),
+            new Image(),
+        ];
+
+        enemigosImgs[0].src = 'files/zombie/gordo.png';
+        enemigosImgs[1].src = 'files/zombie/flaco.png'; 
+        enemigosImgs[2].src = 'files/zombie/morro.png';
+        enemigosImgs[3].src = 'files/zombie/torrera.png';
+        enemigosImgs[4].src = 'files/zombie/sentado.png';
+
+        const soundtrack = new Audio('files/soundtrack.mp3');
+        soundtrack.play();
+
+        const win = new Audio('files/win.mp3');
+
+        const over = new Audio('files/over.mp3');
+
+
+        const shot = new Audio('files/shot.mp3');
+
+        const empty = new Audio('files/empty.mp3');
+
+        const dead = new Audio('files/ded.mp3');
+
+        const bazukonia = new Audio('files/bala/bazuka.mp3');
+
+        var pruebas = 0;
+
+        var gameOver = false;
+        var gameWin = false;
+
+        var sePuede = 0;
+
+        var avance = 0;
+
+        document.addEventListener("keydown", function (e) {
+            console.log(e)
+
+            switch (e.keyCode) {
+                case 37:
+                case 65:
+                    direction = "left";
+                    break;
+                case 39:
+                case 68:
+                    direction = "right";
+                    break;
+                case 32:
+                    if (!baluchaPrueba && ammo > 0 && !pause) {
+                        direction = "space";
+                        ammo -= 1;
+                        baluchaPrueba = 1;
+                        posicionY = player.y;
+                        posicionX = player.x;
+                        avance = 1;
+                    } else if (ammo === 0 || pause) {
+                        empty.play();
+                    }
+                    break;
+                case 16:
+                if (!bazukaso && ammoBazuka > 0 && !pause) {
+                    direction = "shift";
+                    ammoBazuka -= 1;
+                    posicionY = player.y;
+                    posicionX = player.x;
+                    bazukaso = 1;
+                } else if (ammoBazuka === 0 || pause) {
+                    empty.play();
+                }
+                    break;
+                case 69:
+                    pause = !pause;
+                break;
+                case 70:
+                    iniciar = true;
+                break;
+                case 82:
+                    pruebas = 1;
+                break;
+            }
+        })
+
+        function update() {
+            //cuando pongas el pause de nuevo es pause aqui, sin !
+            if (iniciar && !pause && !gameOver) {
+                switch (direction) {
+                    case "left":
+                        player.x = player.x - 3;
+                        izquierdaPlayer = 1;
+                        if (player.x <= -40) {
+                            player.x = 900;
+                        }
+                        break;
+                    case "right":
+                        player.x = player.x + 3;
+                        izquierdaPlayer = 0;
+                        derechaPlayer = 1;
+                        if (player.x >= 900) {
+                            player.x = -40;
+                        }
+                        break;
+                    case "space":
+                        izquierdaPlayer = 0;
+                        derechaPlayer = 0;
+                        playerDisparo = 1;
+                        break;
+                }
+            }
+        
+
+            proyectiles();
+
+            function enemigos(enemies, j,array){
+                if (bala.hit(enemies)) {
+                    enemies.x = 1800; 
+                    enemies.y = 1800;
+                    points += 10;
+                    baluchaPrueba = 0;
+
+                    enemigosMuertos = enemigosMuertos + 1;
+
+                    dead.play();
+
+                    posicionX = player.x;
+                    posicionY = player.y;
+                }
+
+                if (bazuka.hit(enemies)) {
+                    enemies.x = 1800; 
+                    enemies.y = 1800;
+                    points += 10;
+                    bazukaso = 0;
+
+                    dead.play();
+
+                    posicionX = player.x;
+                    posicionY = player.y;
+                }
+            }
+
+            function enemigoHardy(enemigoHard, k, arra) {
+                if (bala.hit(enemigoHard) && !enemigoHard.herido) {
+                    enemigoHard.herido = true; 
+                    baluchaPrueba = 0;
+            
+                    vidaEnemigoFuerte += 1;
+            
+                    if(vidaEnemigoFuerte === 3){
+                        enemigoHard.x = 1800; 
+                        enemigoHard.y = 1800;
+
+                        enemigosMuertos = enemigosMuertos + 1;
+                    }
+            
+                    dead.play();
+                
+                    posicionX = player.x;
+                    posicionY = player.y;
+            
+                    setTimeout(() => enemigoHard.herido = false, 1000);
+                }
+
+                if (bazuka.hit(enemigoHard)) {
+                    enemigoHard.x = 1800; 
+                    enemigoHard.y = 1800;
+                    points += 10;
+                    bazukaso = 0;
+
+                    enemigosMuertos = enemigosMuertos + 1;
+
+                    dead.play();
+
+                    posicionX = player.x;
+                    posicionY = player.y;
+                }
+            }
+
+            function muros(walls, i, arr) {
+                if (player.hit(walls)) {
+                    switch (direction) {
+                        case "left":
+                            player.x = player.x + 3;
+                            break;
+                        case "up":
+                            player.y = player.y + 3;
+                            break;
+                        case "right":
+                            player.x = player.x - 3;
+                            break;
+                        case "down":
+                            player.y = player.y - 3;
+                            break;
+                    }
+                }
+                if (bala.hit(walls)) {
+                    baluchaPrueba = 0;
+                }
+            }
+
+            function murosPerder(murosLost, i, arr) {
+                enemies.forEach(enemy => {
+                    if (enemy.hit(murosLost)) {
+                        perdiste = 1;
+                    }
+                });
+                enemigoFuerte.forEach(enemigoHard => {
+                    if(enemigoHard.hit(murosLost)){
+                        perdiste = 1;
+                    }
+                })
+            }
+
+            walls.forEach(muros)
+            enemigoFuerte.forEach(enemigoHardy)
+            perder.forEach(murosPerder)
+            enemies.forEach(enemigos)
+        }
+
+        function proyectiles() {
+            console.log(enemigosMuertos)
+            if (baluchaPrueba === 1) {
+                posicionY -= 5; 
+                bala.x = posicionX; 
+                bala.y = posicionY; 
+        
+                if (posicionY < -bala.h) {
+                    baluchaPrueba = 0;
+                    posicionX = player.x;
+                    posicionY = player.y;
+                }
+            }
+        
+            if (bazukaso === 1) {
+                posicionY -= 5; 
+                bazuka.x = posicionX; 
+                bazuka.y = posicionY; 
+                
+                if (posicionY < -bazuka.h) {
+                    bazukaso = 0; 
+                    posicionX = player.x;
+                    posicionY = player.y;
+                }
+            }
+        }
+
+        function jugadorGano(){
+            if(enemigosMuertos === 48){
+                cancelAnimationFrame(pintar);
+
+                sePuede = 1;
+                gameWin = true;
+
+                soundtrack.pause();
+                soundtrack.currentTime = 0;
+
+                win.play();
+        
+                if(sePuede === 1){
+                    document.addEventListener("keydown", function (e) {
+                        if ((e.key === 'r' || e.key === 'R') && sePuede === 1) {
+                            sePuede = 0;
+                            reiniciarJuego();
+                        }
+                    });
+                }
+            }
+        }
+        
+        function jugadorPerdio(){
+            if (perdiste > 0 || ammo === 0) {
+        
+                cancelAnimationFrame(pintar);
+
+                sePuede = 1;
+                gameOver = true;
+
+                soundtrack.pause();
+                soundtrack.currentTime = 0;
+
+                over.play();
+        
+                if(sePuede === 1){
+                    document.addEventListener("keydown", function (e) {
+                        if ((e.key === 'r' || e.key === 'R') && sePuede === 1) {
+                            sePuede = 0;
+                            reiniciarJuego();
+                        }
+                    });
+                }
+            }
+        }
+
+        function reiniciarJuego() {
+
+            win.pause();
+            win.currentTime = 0;
+
+            over.pause();
+            over.currentTime = 0;
+
+            enemigosMuertos = 0;
+            player.x = 450;
+            player.y = 800;
+            points = 0;
+            ammo = 55;
+            ammoBazuka = 2;
+            perdiste = 0;
+            enemies = [];
+            walls = [];
+            perder = [];
+            enemigoFuerte = [];
+            timer = 0;
+            sePuede = 0;
+            gameOver = false;
+            gameWin = false;
+
+            pintarObjetos();
+        }
+
+        function avanzarEnemigos(){
+            if (avance === 1) {
+                enemies.forEach(enemy => {
+                    enemy.y += 10; 
+                });
+                enemigoFuerte.forEach(enemigoHard => {
+                    enemigoHard.y += 10;
+                });
+                avance = 0;
+            }
+        }
+
+        function pausaJuego(){
+            if (pause) {
+                timerIspausa = true;
+            }else{
+                timerIspausa = false;
+            }
+        }
+
+        function balaMovimiento(){
+            if (baluchaPrueba === 1){
+                ctx.drawImage(balazo, bala.x, bala.y, bala.w, bala.h);
+                posicionY -= 5;
+                shot.play();
+        
+                if (posicionY < -bala.h) {
+                    baluchaPrueba = 0;
+                }
+            }
+        
+            if (bazukaso === 1){
+                ctx.drawImage(balota, bazuka.x, bazuka.y, bazuka.w, bazuka.h);
+                posicionY -= 5;
+                bazukonia.play();
+        
+                if (posicionY < -bazuka.h) {
+                    bazukaso = 0; 
+                }
+            }
+        }
+
+        function movimientoJugador(){
+            if(izquierdaPlayer === 1){
+                ctx.drawImage(playerIzquierda, player.x, player.y, player.w, player.h)
+            } else if(derechaPlayer === 1){
+                ctx.drawImage(playerDerecha, player.x, player.y, player.w, player.h)
+            }else if(playerDisparo === 1){
+                ctx.drawImage(playerDisparando, player.x, player.y, player.w, player.h)
+            }
+        }
+
+        function marcadores(){
+            ctx.font = "30px Courier New Bold";
+            ctx.fillStyle = "white";
+            ctx.fillText("Balas: " + ammo, 100, 800);
+
+            ctx.font = "30px Courier New Bold";
+            ctx.fillText("Tiempo: " + timer, 700, 800);
+        }
+
+        function iniciarTimer() {
+            setInterval(tiempo, 1000);
+        }
+
+        function tiempo(){
+            if(!timerIspausa){
+                timer++;
+            }
+        }
+
+        function inicioJuego() {
+            if (!iniciar) {
+                ctx.drawImage(menu, 0, 0, my_canvas.width, my_canvas.height);
+            } else {
+                marcadores();
+                if (!timerIniciado) { 
+                    iniciarTimer();
+                    timerIniciado = true; 
+                }
+            }
+        }
+
+        function pintar() {
+            ctx.clearRect(0, 0, my_canvas.width, my_canvas.height);
+            ctx.drawImage(fondo2, 0, 0, my_canvas.width, my_canvas.height);
+        
+            if (pause) {
+                ctx.drawImage(pausa, 0, 0, my_canvas.width, my_canvas.height);
+            } else if(gameOver){
+                ctx.drawImage(imgPerder, 0, 0, my_canvas.width, my_canvas.height);
+            }else if(gameWin){
+                ctx.drawImage(ganaste, 0, 0, my_canvas.width, my_canvas.height);
+            }else{
+                enemies.forEach(enemy => {
+                    enemy.draw(ctx);
+                });
+        
+                function muros(walls, i, arr) {
+                    ctx.drawImage(carroMuro, walls.x, walls.y, walls.w, walls.h);
+                }
+
+                function enemigoHardy(enemigoHard, k, arra) {
+                    ctx.drawImage(zombieFuerte, enemigoHard.x, enemigoHard.y, enemigoHard.w, enemigoHard.h);
+                }
+        
+                function murosPerder(murosLost, i, arr) {
+                    ctx.drawImage(barraPerder, murosLost.x, murosLost.y, murosLost.w, murosLost.h);
+                }
+        
+                enemigoFuerte.forEach(enemigoHardy)
+                perder.forEach(murosPerder)
+                walls.forEach(muros)
+        
+                inicioJuego();
+                jugadorGano();
+                jugadorPerdio();
+                movimientoJugador();
+                balaMovimiento();
+                avanzarEnemigos();
+                update();
+            }
+            requestAnimationFrame(pintar);
+        }
+        
+
+        requestAnimationFrame(pintar);
+
+        var bala = new Bullet(0, 0, 15, 15, "red", 10);
+        var bazuka = new Bullet(0, 0, 15, 15, "red", 10);
+
+        var player = new Player(450, 800, 20, 20, "white", 10);
+
+        function pintarObjetos(){
+            let cols = 10;  
+            let rows = 5;   
+            let enemyWidth = 20; 
+            let enemyHeight = 20; 
+            let xSpacing = (900 - (cols * enemyWidth)) / (cols + 1); 
+
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    let xPos = xSpacing + col * (enemyWidth + xSpacing); 
+                    let yPos = 50 + row * (enemyHeight + 50);
+            
+                    let xVariation = (Math.random() - 0.5) * 20; 
+                    let yVariation = (Math.random() - 0.5) * 20; 
+            
+                    enemies.push(new Enemy(xPos + xVariation, yPos + yVariation, enemyWidth, enemyHeight, "red", 10));
+                }
+            }
+            enemigoFuerte.push(new EnemyVariety(200, 400, 35, 35, "grey", 10));
+            enemigoFuerte.push(new EnemyVariety(400, 500, 35, 35, "grey", 10));
+            perder.push(new Wall(0, 770, 900, 20, "grey", 10));
+        }
+        pintarObjetos();
+    </script>
+</body>
+
+</html>

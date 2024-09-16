@@ -1,0 +1,51 @@
+body {
+    background-image: url("files/fondo.png");
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center top;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.container {
+    position: relative;
+    width: 100%;
+    max-width: 1200px; 
+    display: flex;
+    justify-content: center;
+    top: 30px;
+}
+
+canvas {
+    box-shadow: 30px 15px 80px black;
+    margin-right: 20px;
+}
+
+.instrucciones {
+    position: fixed;
+    right: 80px; 
+    top: 250px; 
+    width: 250px;
+    color: red;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.instrucciones h1 {
+    font-size: 30px;
+    text-align: center;
+    font-family: "Courier New";
+}
+
+.instrucciones ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.instrucciones ul li {
+    font-size: 25px;
+    margin-bottom: 10px;
+}        
