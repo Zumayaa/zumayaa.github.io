@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="files/icon.png" type="image/png">
     <title>Space Invaders</title>
 </head>
 
@@ -27,15 +28,11 @@
     <script src="player.js"></script>
     <script src="enemy.js"></script>
     <script src="bullet.js"></script>
+    <script src="wall.js"></script>
     <script src="enemyVariety.js"></script>
     <script type="text/javascript">
         const my_canvas = document.getElementById('my_canvas');
         const ctx = my_canvas.getContext('2d');
-
-        var flag = 0;
-        var pressed = 0;
-
-        var points = 0;
 
         var enemigosMuertos = 0;
 
@@ -44,8 +41,6 @@
         var ammoBazuka = 2;
         var bazukaDisparada = false;
         var ammo = 75;
-
-        var speed = 0;
 
         var direction = "";
 
@@ -148,8 +143,6 @@
 
         const bazukonia = new Audio('files/bala/bazuka.mp3');
 
-        var pruebas = 0;
-
         var gameOver = false;
         var gameWin = false;
 
@@ -198,9 +191,6 @@
                 case 70:
                     iniciar = true;
                 break;
-                case 82:
-                    pruebas = 1;
-                break;
             }
         })
 
@@ -238,7 +228,6 @@
                 if (bala.hit(enemies)) {
                     enemies.x = 1800; 
                     enemies.y = 1800;
-                    points += 10;
                     baluchaPrueba = 0;
 
                     enemigosMuertos = enemigosMuertos + 1;
@@ -252,7 +241,6 @@
                 if (bazuka.hit(enemies)) {
                     enemies.x = 1800; 
                     enemies.y = 1800;
-                    points += 10;
                     bazukaso = 0;
 
                     dead.play();
@@ -287,7 +275,6 @@
                 if (bazuka.hit(enemigoHard)) {
                     enemigoHard.x = 1800; 
                     enemigoHard.y = 1800;
-                    points += 10;
                     bazukaso = 0;
 
                     enemigosMuertos = enemigosMuertos + 1;
@@ -341,7 +328,6 @@
         }
 
         function proyectiles() {
-            console.log(enemigosMuertos)
             if (baluchaPrueba === 1) {
                 posicionY -= 5; 
                 bala.x = posicionX; 
@@ -425,7 +411,6 @@
             enemigosMuertos = 0;
             player.x = 450;
             player.y = 800;
-            points = 0;
             ammo = 55;
             ammoBazuka = 2;
             perdiste = 0;
